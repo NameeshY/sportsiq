@@ -510,16 +510,43 @@ def main():
     # Get latest metrics
     latest_metrics = fatigue_metrics.sort_values('GAME_DATE', ascending=False).iloc[0]
     
+    # Generate risk level information first
+    risk_gauge_fig, risk_level = create_risk_gauge(latest_metrics['RISK_PROBABILITY'], "Injury Risk")
+    risk_color_class = f"risk-{risk_level.lower()}"
+    
+    # Add player image in a separate row above the risk indicators
+    player_image_col1, player_image_col2 = st.columns([1, 3])
+    
+    with player_image_col1:
+        # Player image (would be replaced with actual player images in production)
+        try:
+            st.image(f"https://cdn.nba.com/headshots/nba/latest/1040x760/{selected_player['id']}.png", 
+                    width=150, caption=selected_player_name)
+        except Exception as e:
+            st.warning(f"Could not load player image. Using placeholder instead. Error: {str(e)}")
+            # Use a placeholder image if the NBA image fails to load
+            st.image("https://cdn.nba.com/headshots/nba/latest/1040x760/fallback.png", 
+                    width=150, caption=selected_player_name)
+    
+    with player_image_col2:
+        # Player info card with more details
+        st.markdown(f"""
+        <div class="card">
+            <h3>{selected_player['name']}</h3>
+            <p><strong>Team:</strong> {selected_player['team']} | <strong>Position:</strong> {selected_player['position']}</p>
+            <p><strong>Age:</strong> {selected_player['age']} | <strong>Last Game:</strong> {latest_metrics['GAME_DATE'].strftime('%b %d, %Y')}</p>
+            <p><strong>Current Risk Level:</strong> <span class="{risk_color_class}">{risk_level}</span></p>
+        </div>
+        """, unsafe_allow_html=True)
+    
     # Create columns for risk indicators
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        # Risk gauge
-        fig, risk_level = create_risk_gauge(latest_metrics['RISK_PROBABILITY'], "Injury Risk")
-        st.plotly_chart(fig, use_container_width=True)
+        # Risk gauge - use the previously created figure
+        st.plotly_chart(risk_gauge_fig, use_container_width=True)
         
         # Risk level text with appropriate color
-        risk_color_class = f"risk-{risk_level.lower()}"
         st.markdown(f"<div style='text-align: center;'>Risk Level: <span class='{risk_color_class}'>{risk_level}</span></div>", unsafe_allow_html=True)
     
     with col2:
@@ -557,21 +584,21 @@ def main():
         """.format(latest_metrics['DAYS_REST']), unsafe_allow_html=True)
     
     with col4:
-        # Player info
+        # Usage information
         st.markdown("""
-        <div class="card">
-            <h4>{}</h4>
-            <p>{} | {}</p>
-            <p>Age: {}</p>
-            <p>Last Game: {}</p>
+        <div class="indicator-card">
+            <div class="indicator-value" style="color: #9C27B0;">{:.1f}%</div>
+            <div class="indicator-label">Usage Percentage</div>
         </div>
-        """.format(
-            selected_player['name'],
-            selected_player['team'],
-            selected_player['position'],
-            selected_player['age'],
-            latest_metrics['GAME_DATE'].strftime('%b %d, %Y')
-        ), unsafe_allow_html=True)
+        """.format(latest_metrics['USAGE_PCT']), unsafe_allow_html=True)
+        
+        # Minutes rolling average
+        st.markdown("""
+        <div class="indicator-card" style="margin-top: 1rem;">
+            <div class="indicator-value" style="color: #5E35B1;">{:.1f}</div>
+            <div class="indicator-label">Avg Minutes (Last 5 Games)</div>
+        </div>
+        """.format(latest_metrics['MIN_ROLLING_AVG_5']), unsafe_allow_html=True)
     
     # Insights
     st.markdown('<div class="section-title">Risk Insights</div>', unsafe_allow_html=True)

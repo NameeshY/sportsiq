@@ -215,9 +215,18 @@ def get_team_stats(team_id):
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def get_head_to_head(team1_id, team2_id):
     """Generate sample head-to-head statistics"""
-    # Use consistent seed based on both team IDs
-    seed = team1_id * 1000 + team2_id
-    np.random.seed(seed)
+    # Use consistent seed based on both team IDs - ensure it's a valid integer
+    try:
+        # Convert to integers first to avoid any type issues
+        team1_id_int = int(team1_id)
+        team2_id_int = int(team2_id)
+        # Use a simple hash to avoid integer overflow
+        seed_value = (team1_id_int * 1000 + team2_id_int) % 2147483647  # Max 32-bit integer
+        np.random.seed(seed_value)
+    except Exception as e:
+        # If there's any error with the seed, use a default
+        st.warning(f"Warning: Using default seed for head-to-head stats: {str(e)}")
+        np.random.seed(42)
     
     # Generate recent meetings (last 3 games)
     meetings = []
@@ -291,6 +300,15 @@ def predict_game_outcome(home_team_id, away_team_id):
     
     # Get head to head stats
     h2h = get_head_to_head(home_team_id, away_team_id)
+    
+    # Set a safe random seed for consistent predictions
+    try:
+        # Convert to integers and create a safe seed value
+        seed_value = (int(home_team_id) * 10000 + int(away_team_id)) % 2147483647
+        np.random.seed(seed_value)
+    except Exception:
+        # Use a default seed if there's any issue
+        np.random.seed(42)
     
     # Calculate basic predictors (with home court advantage)
     # This is a simplified model - a real one would be much more complex
