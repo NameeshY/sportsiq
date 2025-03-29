@@ -1,26 +1,46 @@
 """
 SportsIQ - Team Analysis
-Provides team statistics and lineup analysis
+Analyze team performance metrics and statistics
 """
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import os
 import sys
-from datetime import datetime
+import logging
+from datetime import datetime, timedelta
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Import utilities and modules
-from sportsiq.utils import setup_logging, get_logger, test_connection, execute_query
-
-# Set up logging
-logger = setup_logging()
-module_logger = get_logger("team_analysis")
+try:
+    from sportsiq.utils.db_utils import test_connection, execute_query
+    from sportsiq.utils.api_client import get_all_teams
+    from sportsiq.utils.style import apply_light_mode
+except ImportError:
+    # If import fails, create placeholder functions
+    logging.basicConfig(level=logging.INFO)
+    module_logger = logging.getLogger("team_analysis")
+    module_logger.warning("Could not import from sportsiq.utils, using placeholder functions")
+    
+    def test_connection():
+        return True
+    
+    def execute_query(query, params=None):
+        return []
+    
+    def get_all_teams():
+        return []
+    
+    def apply_light_mode():
+        pass
+else:
+    # Setup logging
+    logging.basicConfig(level=logging.INFO)
+    module_logger = logging.getLogger("team_analysis")
 
 # Set page configuration
 st.set_page_config(
@@ -30,7 +50,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Apply light mode from central style utility
+apply_light_mode()
+
+# Custom CSS for this page only
 st.markdown("""
 <style>
     .page-title {
@@ -63,11 +86,42 @@ st.markdown("""
     .metric-value {
         font-size: 1.8rem;
         font-weight: bold;
-        color: #1E88E5;
     }
     .metric-label {
         font-size: 0.9rem;
         color: #616161;
+    }
+    .team-section {
+        margin-top: 2rem;
+    }
+    .rating-good {
+        color: #388E3C;
+        font-weight: bold;
+    }
+    .rating-average {
+        color: #FFA000;
+        font-weight: bold;
+    }
+    .rating-poor {
+        color: #D32F2F;
+        font-weight: bold;
+    }
+    .team-logo {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    .player-row {
+        padding: 0.5rem;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        background-color: #f0f0f0;
+    }
+    .lineup-card {
+        border-radius: 5px;
+        padding: 1rem;
+        background-color: #f0f0f0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1rem;
     }
 </style>
 """, unsafe_allow_html=True)

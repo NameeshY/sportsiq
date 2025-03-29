@@ -1,6 +1,6 @@
 """
-SportsIQ - Player Performance Dashboard
-Provides detailed analysis and visualization of NBA player statistics
+SportsIQ - Player Dashboard
+Analyze individual player performance metrics and statistics
 """
 import streamlit as st
 import pandas as pd
@@ -12,16 +12,37 @@ import os
 import sys
 import time
 from datetime import datetime, timedelta
+import logging
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Import utilities and modules
-from sportsiq.utils import setup_logging, get_logger, test_connection, execute_query
-
-# Set up logging
-logger = setup_logging()
-module_logger = get_logger("player_dashboard")
+try:
+    from sportsiq.utils.db_utils import test_connection, execute_query
+    from sportsiq.utils.api_client import get_all_players
+    from sportsiq.utils.style import apply_light_mode
+except ImportError:
+    # If import fails, create placeholder functions
+    logging.basicConfig(level=logging.INFO)
+    module_logger = logging.getLogger("player_dashboard")
+    module_logger.warning("Could not import from sportsiq.utils, using placeholder functions")
+    
+    def test_connection():
+        return True
+    
+    def execute_query(query, params=None):
+        return []
+    
+    def get_all_players():
+        return []
+    
+    def apply_light_mode():
+        pass
+else:
+    # Setup logging
+    logging.basicConfig(level=logging.INFO)
+    module_logger = logging.getLogger("player_dashboard")
 
 # Set page configuration
 st.set_page_config(
@@ -31,7 +52,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Apply light mode from central style utility
+apply_light_mode()
+
+# Custom CSS for this page only
 st.markdown("""
 <style>
     .page-title {
@@ -54,27 +78,46 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 1rem;
     }
-    .stat-card {
+    .metric-card {
         text-align: center;
         padding: 1rem;
         border-radius: 5px;
         background-color: #f5f5f5;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
-    .stat-value {
+    .metric-value {
         font-size: 1.8rem;
         font-weight: bold;
-        color: #1E88E5;
     }
-    .stat-label {
+    .metric-label {
         font-size: 0.9rem;
         color: #616161;
     }
-    .highlight {
-        background-color: #e3f2fd;
+    .player-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .player-info {
+        margin-left: 1rem;
+    }
+    .player-name {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 0;
+        padding: 0;
+    }
+    .player-team {
+        font-size: 1.2rem;
+        color: #616161;
+        margin: 0;
+        padding: 0;
+    }
+    .stat-comparison {
         padding: 0.5rem;
-        border-radius: 5px;
-        border-left: 3px solid #1E88E5;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        background-color: #f0f0f0;
     }
 </style>
 """, unsafe_allow_html=True)

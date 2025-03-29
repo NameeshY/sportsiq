@@ -17,7 +17,23 @@ from datetime import datetime, timedelta
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Import utilities and modules
-from sportsiq.utils import setup_logging, get_logger, test_connection, execute_query
+try:
+    from sportsiq.utils import setup_logging, get_logger, test_connection, execute_query
+    from sportsiq.utils.style import apply_light_mode
+except ImportError:
+    # If import fails, create placeholder functions
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    def setup_logging():
+        return logging.getLogger("injury_risk")
+    def get_logger(name):
+        return logging.getLogger(name)
+    def test_connection():
+        return True
+    def execute_query(query, params=None):
+        return []
+    def apply_light_mode():
+        pass
 
 # Set up logging
 logger = setup_logging()
@@ -31,7 +47,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Apply light mode from central style utility
+apply_light_mode()
+
+# Custom CSS for this page only
 st.markdown("""
 <style>
     .page-title {

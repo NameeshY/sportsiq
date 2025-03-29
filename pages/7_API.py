@@ -8,16 +8,26 @@ import json
 import os
 import sys
 from datetime import datetime
+import logging
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Import utilities and modules
-from sportsiq.utils import setup_logging, get_logger
-
-# Set up logging
-logger = setup_logging()
-module_logger = get_logger("api")
+try:
+    from sportsiq.utils.style import apply_light_mode
+except ImportError:
+    # If import fails, create placeholder functions
+    logging.basicConfig(level=logging.INFO)
+    module_logger = logging.getLogger("api")
+    module_logger.warning("Could not import from sportsiq.utils, using placeholder functions")
+    
+    def apply_light_mode():
+        pass
+else:
+    # Setup logging
+    logging.basicConfig(level=logging.INFO)
+    module_logger = logging.getLogger("api")
 
 # Set page configuration
 st.set_page_config(
@@ -27,7 +37,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Apply light mode from central style utility
+apply_light_mode()
+
+# Custom CSS for this page only
 st.markdown("""
 <style>
     .page-title {

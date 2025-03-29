@@ -23,13 +23,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 # Import utilities and modules with error handling
 try:
     from sportsiq.utils.db_utils import test_connection, execute_query
+    from sportsiq.utils.style import apply_light_mode
 except ImportError:
     # If import fails, create placeholder functions
-    module_logger.warning("Could not import from sportsiq.utils.db_utils, using placeholder functions")
+    module_logger.warning("Could not import from sportsiq.utils, using placeholder functions")
     def test_connection():
         return True
     def execute_query(query, params=None):
         return []
+    def apply_light_mode():
+        pass
 
 # Set page configuration
 st.set_page_config(
@@ -39,7 +42,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Apply light mode from central style utility
+apply_light_mode()
+
+# Custom CSS for this page only
 st.markdown("""
 <style>
     .page-title {

@@ -8,16 +8,26 @@ import os
 import sys
 import json
 from datetime import datetime
+import logging
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Import utilities and modules
-from sportsiq.utils import setup_logging, get_logger
-
-# Set up logging
-logger = setup_logging()
-module_logger = get_logger("settings")
+try:
+    from sportsiq.utils.style import apply_light_mode
+except ImportError:
+    # If import fails, create placeholder functions
+    logging.basicConfig(level=logging.INFO)
+    module_logger = logging.getLogger("settings")
+    module_logger.warning("Could not import from sportsiq.utils, using placeholder functions")
+    
+    def apply_light_mode():
+        pass
+else:
+    # Setup logging
+    logging.basicConfig(level=logging.INFO)
+    module_logger = logging.getLogger("settings")
 
 # Set page configuration
 st.set_page_config(
@@ -27,6 +37,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Apply light mode from central style utility
+apply_light_mode()
+
 # Define the settings file path
 SETTINGS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config")
 SETTINGS_FILE = os.path.join(SETTINGS_DIR, "user_settings.json")
@@ -35,7 +48,7 @@ SETTINGS_FILE = os.path.join(SETTINGS_DIR, "user_settings.json")
 if not os.path.exists(SETTINGS_DIR):
     os.makedirs(SETTINGS_DIR)
 
-# Custom CSS
+# Custom CSS for this page only
 st.markdown("""
 <style>
     .page-title {
@@ -51,45 +64,23 @@ st.markdown("""
         margin-top: 1rem;
         margin-bottom: 0.5rem;
     }
-    .settings-card {
-        background-color: #f9f9f9;
+    .card {
         border-radius: 5px;
         padding: 1.5rem;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 1rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
-    .settings-header {
-        font-size: 1.3rem;
+    .settings-group {
+        margin-bottom: 2rem;
+    }
+    .settings-label {
         font-weight: bold;
-        color: #2E7D32;
-        margin-bottom: 1rem;
-    }
-    .settings-description {
-        font-size: 0.9rem;
-        color: #616161;
-        margin-bottom: 1rem;
-    }
-    .status-box {
-        padding: 10px;
-        border-radius: 5px;
-        font-weight: bold;
-        text-align: center;
-    }
-    .status-success {
-        background-color: #E8F5E9;
-        color: #2E7D32;
-    }
-    .status-warning {
-        background-color: #FFF8E1;
-        color: #F57F17;
-    }
-    .status-error {
-        background-color: #FFEBEE;
-        color: #C62828;
+        margin-bottom: 0.5rem;
     }
     .footer {
         text-align: center;
-        padding: 20px;
+        padding: 1rem;
         font-size: 0.8rem;
         color: #9e9e9e;
         margin-top: 2rem;
