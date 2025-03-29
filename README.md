@@ -7,9 +7,23 @@ SportsIQ is a comprehensive NBA analytics dashboard that provides real-time insi
 ## 🌟 Features
 
 - **Player Performance Dashboard**: Track player statistics, visualize performance trends, and discover insights
+
+<img width="1790" alt="Screenshot 2025-03-28 at 9 52 28 PM" src="https://github.com/user-attachments/assets/4143b05c-2df8-4db7-989e-6509bcf69cab" />
+
 - **Injury Risk Analysis**: Assess player fatigue and injury risk based on workload analysis
+
+<img width="1792" alt="Screenshot 2025-03-28 at 9 51 12 PM" src="https://github.com/user-attachments/assets/c33e8319-87a5-42cc-ab13-3dcfa4dac0f9" />
+
+<img width="1792" alt="Screenshot 2025-03-28 at 9 50 52 PM" src="https://github.com/user-attachments/assets/53daf398-4787-4a38-8829-f8514952d5a0" />
+
 - **Team Analysis**: Analyze team performance metrics and lineup effectiveness
+
+<img width="1792" alt="Screenshot 2025-03-28 at 9 53 36 PM" src="https://github.com/user-attachments/assets/6b269053-44b9-407a-8f06-b5fa226ca387" />
+
 - **Game Prediction**: Predict game outcomes with machine learning models
+
+ <img width="1792" alt="Screenshot 2025-03-28 at 9 54 32 PM" src="https://github.com/user-attachments/assets/eaccbed0-b715-40cc-bca6-8b5fd78250d4" />
+
 - **Interactive Visualizations**: Explore data through dynamic, interactive charts
 - **API Access**: Programmatically access NBA data and analytics
 
