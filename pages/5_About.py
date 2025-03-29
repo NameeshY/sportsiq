@@ -277,32 +277,6 @@ def main():
         * CI/CD pipeline for continuous deployment
         """)
     
-    # Project team
-    st.markdown('<div class="section-title">Project Team</div>', unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-        <div class="person-card">
-            <img src="https://randomuser.me/api/portraits/men/32.jpg" width="150" style="border-radius: 50%;">
-            <h3>David Johnson</h3>
-            <p>Lead Data Scientist</p>
-            <p style="font-size: 0.9rem;">Specializes in machine learning models and predictive analytics for sports data.</p>
-        </div>
-        <div class="person-card">
-            <img src="https://randomuser.me/api/portraits/women/44.jpg" width="150" style="border-radius: 50%;">
-            <h3>Sarah Chen</h3>
-            <p>Full Stack Developer</p>
-            <p style="font-size: 0.9rem;">Expert in Streamlit development and database integration for analytics platforms.</p>
-        </div>
-        <div class="person-card">
-            <img src="https://randomuser.me/api/portraits/men/22.jpg" width="150" style="border-radius: 50%;">
-            <h3>Michael Rodriguez</h3>
-            <p>Sports Analytics Specialist</p>
-            <p style="font-size: 0.9rem;">Former basketball analyst with extensive knowledge of NBA statistics and metrics.</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
     # Future roadmap
     st.markdown('<div class="section-title">Future Roadmap</div>', unsafe_allow_html=True)
     
