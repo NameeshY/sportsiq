@@ -610,8 +610,6 @@ def main():
     # Make prediction when button is clicked
     if predict_button:
         with st.spinner("Analyzing data and predicting outcome..."):
-            # Add small delay for UX
-            time.sleep(1)
             # Generate prediction
             st.session_state.prediction = predict_game_outcome(home_team["id"], away_team["id"])
     
