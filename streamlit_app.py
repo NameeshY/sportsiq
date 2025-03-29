@@ -36,6 +36,20 @@ st.markdown("""
         color: rgb(49, 51, 63) !important;
         background-color: white !important;
     }
+    
+    /* Override dark mode completely */
+    .st-emotion-cache-16txtl3, .st-emotion-cache-1gulkj5, .st-emotion-cache-e370rw, .st-emotion-cache-18ni7ap, .st-emotion-cache-uf99v8 {
+        background-color: #f8f9fa !important;
+        color: rgb(49, 51, 63) !important;
+    }
+    
+    /* Streamlit specific components */
+    .stButton, .stTextInput, .stSelectbox, .stDateInput, .stNumberInput, .stSlider, .stCheckbox, .stRadio, 
+    .stDataFrame, .stTable, .stMarkdown, .stText, .stTitle, 
+    .stPlotlyChart, .stVegaLiteChart, .stImage, .stAlert, .stProgress {
+        color: rgb(49, 51, 63) !important;
+        background-color: white !important;
+    }
 
     /* Sidebar styling */
     .st-emotion-cache-16txtl3, .st-emotion-cache-1gulkj5 {
@@ -48,7 +62,7 @@ st.markdown("""
     }
 
     /* Headers and text */
-    h1, h2, h3, h4, h5, h6, p, div, span {
+    h1, h2, h3, h4, h5, h6, p, div, span, .st-cp, .st-cx, .st-cy, .st-cz, .st-da, .st-db, .st-dc, .st-dd, .st-de, .st-df {
         color: rgb(49, 51, 63) !important;
     }
     
@@ -107,6 +121,31 @@ st.markdown("""
     .stButton>button[data-baseweb="button"][kind="primary"] {
         background-color: #1E88E5 !important;
         color: white !important;
+    }
+    
+    /* Pagination buttons */
+    button[kind="primaryFormSubmit"], button[kind="secondaryFormSubmit"] {
+        background-color: white !important;
+        color: rgb(49, 51, 63) !important;
+        border-color: #e0e0e0 !important;
+    }
+    
+    /* Code blocks - ensure they're visible in light mode */
+    .stCodeBlock {
+        background-color: #f5f5f5 !important;
+        color: #37474F !important;
+    }
+    
+    /* Table elements */
+    .dataframe, th, td {
+        background-color: white !important;
+        color: rgb(49, 51, 63) !important;
+        border-color: #e0e0e0 !important;
+    }
+    
+    /* Ensure plots have light backgrounds */
+    .js-plotly-plot, .plot-container, .svg-container {
+        background-color: white !important;
     }
 </style>
 """, unsafe_allow_html=True)

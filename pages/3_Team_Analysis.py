@@ -110,43 +110,39 @@ def get_sample_teams():
     ]
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def get_team_stats(team_id):
-    """Generate sample team statistics"""
-    np.random.seed(team_id)  # Use team ID as seed for consistency
+def get_team_stats(team_id, season="2022-23"):
+    """Generate sample statistics for a team"""
+    # Use both team ID and season as seed for consistency
+    seed = int(team_id) + hash(season) % 10000
+    np.random.seed(seed)
     
-    # Generate basic team statistics
-    wins = np.random.randint(30, 60)
+    # Basic stats
+    win_pct = np.random.uniform(0.25, 0.75)
+    wins = int(82 * win_pct)
     losses = 82 - wins
     
-    # Calculate win percentage
-    win_pct = wins / 82
+    # Offensive and defensive ratings
+    # Better team = higher win percentage = better ratings generally
+    ortg_base = 105 + (win_pct - 0.5) * 20
+    drtg_base = 110 - (win_pct - 0.5) * 20
     
-    # Generate offensive and defensive stats with some consistency
-    if win_pct > 0.6:  # Good team
-        pts_pg = np.random.uniform(110, 120)
-        opp_pts_pg = np.random.uniform(105, 112)
-        ortg = np.random.uniform(112, 118)
-        drtg = np.random.uniform(108, 114)
-    elif win_pct > 0.4:  # Average team
-        pts_pg = np.random.uniform(107, 115)
-        opp_pts_pg = np.random.uniform(107, 115)
-        ortg = np.random.uniform(110, 115)
-        drtg = np.random.uniform(110, 115)
-    else:  # Below average team
-        pts_pg = np.random.uniform(103, 110)
-        opp_pts_pg = np.random.uniform(112, 120)
-        ortg = np.random.uniform(105, 111)
-        drtg = np.random.uniform(114, 120)
-    
-    # Net rating
+    # Add some randomness
+    ortg = ortg_base + np.random.uniform(-3, 3)
+    drtg = drtg_base + np.random.uniform(-3, 3)
     net_rtg = ortg - drtg
     
-    # Other team stats
+    # Points per game (related to offensive rating)
+    pts_pg = ortg / 1.1 + np.random.uniform(-2, 2)
+    opp_pts_pg = drtg / 1.1 + np.random.uniform(-2, 2)
+    
+    # Shooting percentages
     fg_pct = np.random.uniform(0.44, 0.49)
-    fg3_pct = np.random.uniform(0.34, 0.40)
-    ft_pct = np.random.uniform(0.75, 0.83)
-    reb_pg = np.random.uniform(41, 47)
-    ast_pg = np.random.uniform(22, 28)
+    fg3_pct = np.random.uniform(0.33, 0.38)
+    ft_pct = np.random.uniform(0.75, 0.82)
+    
+    # Other basic stats
+    reb_pg = np.random.uniform(40, 50)
+    ast_pg = np.random.uniform(22, 30)
     stl_pg = np.random.uniform(6, 10)
     blk_pg = np.random.uniform(4, 7)
     to_pg = np.random.uniform(12, 16)
@@ -181,13 +177,16 @@ def get_team_stats(team_id):
         "AST_RATIO": ast_ratio,
         "TO_RATIO": to_ratio,
         "REB_PCT": reb_pct,
-        "PACE": pace
+        "PACE": pace,
+        "SEASON": season
     }
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def get_team_players(team_id):
+def get_team_players(team_id, season="2022-23"):
     """Generate sample players for a team"""
-    np.random.seed(team_id)  # Use team ID as seed for consistency
+    # Use both team ID and season as seed for consistency
+    seed = int(team_id) + hash(season) % 10000
+    np.random.seed(seed)
     
     # Number of players to generate
     num_players = 15
@@ -243,10 +242,17 @@ def get_team_players(team_id):
         first_names = ["James", "Michael", "Chris", "Kevin", "Anthony", "Stephen", "Russell", "LeBron", 
                       "Damian", "Jayson", "Luka", "Devin", "Trae", "Joel", "Giannis", "Nikola", "Jimmy"]
         last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Thomas", 
-                     "Wilson", "Taylor", "Anderson", "Harris", "Moore", "Martin", "Jackson", "Thompson"]
+                     "Wilson", "Taylor", "Anderson", "Harris", "Moore", "Martin", "Jackson", "Thompson", 
+                     "White", "Lopez", "Lee", "Gonzalez", "Rodriguez", "Lewis", "Walker", "Hall", 
+                     "Allen", "Young", "King", "Wright", "Scott", "Green", "Baker", "Adams", "Nelson", 
+                     "Carter", "Mitchell", "Parker", "Collins", "Edwards", "Stewart", "Morris", "Murphy"]
         
-        first_name = first_names[player_id % len(first_names)]
-        last_name = last_names[(player_id // 17) % len(last_names)]
+        # Use player ID to get consistent but varied names
+        first_name_idx = player_id % len(first_names)
+        last_name_idx = (player_id * 3) % len(last_names)
+        
+        first_name = first_names[first_name_idx]
+        last_name = last_names[last_name_idx]
         
         players.append({
             "PLAYER_ID": player_id,
@@ -262,18 +268,21 @@ def get_team_players(team_id):
             "FG_PCT": fg_pct,
             "FG3_PCT": fg3_pct,
             "FT_PCT": ft_pct,
-            "STATUS": "Active" if i < 13 else ("Injured" if i == 13 else "G-League")
+            "STATUS": "Active" if i < 13 else ("Injured" if i == 13 else "G-League"),
+            "SEASON": season
         })
     
     return pd.DataFrame(players)
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def get_team_lineups(team_id):
+def get_team_lineups(team_id, season="2022-23"):
     """Generate sample lineup statistics for a team"""
-    np.random.seed(team_id)  # Use team ID as seed for consistency
+    # Use both team ID and season as seed for consistency
+    seed = int(team_id) + hash(season) % 10000
+    np.random.seed(seed)
     
     # Get team players to use in lineups
-    players_df = get_team_players(team_id)
+    players_df = get_team_players(team_id, season)
     players = players_df.head(10).to_dict('records')  # Use top 10 players
     
     # Generate various 5-player combinations
@@ -313,7 +322,7 @@ def get_team_lineups(team_id):
         # Calculate net rating
         net_rtg = ortg - drtg
         
-        # Create lineup name from player names
+        # Create lineup name from player last names
         lineup_name = " - ".join([p["PLAYER_NAME"].split()[-1] for p in lineup_players])
         
         # Generate other lineup metrics
@@ -333,7 +342,8 @@ def get_team_lineups(team_id):
             "FG_PCT": fg_pct,
             "FG3_PCT": fg3_pct,
             "AST_RATIO": ast_ratio,
-            "REB_PCT": reb_pct
+            "REB_PCT": reb_pct,
+            "SEASON": season
         })
     
     return pd.DataFrame(lineups)
@@ -526,14 +536,34 @@ def main():
     # Season selection
     current_year = datetime.now().year
     seasons = [f"{year-1}-{str(year)[2:]}" for year in range(current_year-2, current_year+1)]
+    
+    # Check if season has changed
+    if 'previous_season' not in st.session_state:
+        st.session_state.previous_season = seasons[-1]  # Default to most recent season
+    
     selected_season = st.sidebar.selectbox("Select Season", seasons, index=len(seasons)-1)
+    
+    # Add a button to clear cache and reload data
+    if st.sidebar.button("Refresh Data"):
+        # Clear cached data
+        get_team_stats.clear()
+        get_team_players.clear()
+        get_team_lineups.clear()
+        st.sidebar.success("Data cache cleared! New data will be loaded.")
+    
+    # Check if season changed and clear cache automatically
+    if st.session_state.previous_season != selected_season:
+        get_team_stats.clear()
+        get_team_players.clear()
+        get_team_lineups.clear()
+        st.session_state.previous_season = selected_season
     
     # Load team data
     with st.spinner("Loading team data..."):
         # This would be replaced with database queries in production
-        team_stats = get_team_stats(selected_team["id"])
-        team_players = get_team_players(selected_team["id"])
-        team_lineups = get_team_lineups(selected_team["id"])
+        team_stats = get_team_stats(selected_team["id"], selected_season)
+        team_players = get_team_players(selected_team["id"], selected_season)
+        team_lineups = get_team_lineups(selected_team["id"], selected_season)
     
     # Team header section with logo and basic info
     col1, col2 = st.columns([1, 3])

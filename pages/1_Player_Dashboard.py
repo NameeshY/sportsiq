@@ -97,14 +97,23 @@ def get_sample_players():
     ]
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def get_player_game_stats(player_id):
+def get_player_game_stats(player_id, season="2022-23"):
     """Get player game statistics with generated sample data"""
     # This would be replaced with a database query in production
-    np.random.seed(player_id)  # Use player ID as seed for consistency
+    seed = int(player_id) + hash(season) % 10000
+    np.random.seed(seed)  # Use player ID and season as seed for consistency
     
     # Create 20 recent games
-    end_date = datetime.now() - timedelta(days=2)
-    dates = [end_date - timedelta(days=i*2) for i in range(20)]
+    # Use season to determine dates (if "2021-22", use dates from that season)
+    season_year = int(season.split("-")[0])
+    season_start = datetime(season_year, 10, 18)  # Season typically starts in October
+    season_end = datetime(season_year+1, 4, 10)   # Regular season typically ends in April
+    
+    # Generate 20 game dates within the season
+    total_season_days = (season_end - season_start).days
+    game_intervals = total_season_days // 22  # 22 to ensure we get around 20 games
+    
+    dates = [season_start + timedelta(days=i*game_intervals) for i in range(20)]
     dates.reverse()  # Oldest to newest
     
     # Generate sample statistics with some randomness but realistic trends
@@ -149,7 +158,8 @@ def get_player_game_stats(player_id):
             "FG3_PCT": fg3_pct,
             "FT_PCT": ft_pct,
             "MIN": min_played,
-            "PLUS_MINUS": plus_minus
+            "PLUS_MINUS": plus_minus,
+            "SEASON": season
         })
     
     return pd.DataFrame(stats)
@@ -171,6 +181,10 @@ def get_player_season_stats(player_id):
     
     stats = []
     for i, season in enumerate(seasons):
+        # Use both player ID and season for seed
+        seed = int(player_id) + hash(season) % 10000
+        np.random.seed(seed)
+        
         # Add some randomness to stats but keep them relatively consistent across seasons
         pts = max(0, base_pts + np.random.randint(-3, 4))
         ast = max(0, base_ast + np.random.randint(-1, 2))
@@ -518,7 +532,25 @@ def main():
     # Display season selection
     current_year = datetime.now().year
     seasons = [f"{year-1}-{str(year)[2:]}" for year in range(current_year-2, current_year+1)]
+    
+    # Check if season has changed
+    if 'previous_season' not in st.session_state:
+        st.session_state.previous_season = seasons[-1]  # Default to most recent season
+        
     selected_season = st.sidebar.selectbox("Select Season", seasons, index=len(seasons)-1)
+    
+    # Add a button to clear cache and reload data
+    if st.sidebar.button("Refresh Data"):
+        # Clear cached data
+        get_player_game_stats.clear()
+        get_player_season_stats.clear()
+        st.sidebar.success("Data cache cleared! New data will be loaded.")
+    
+    # Check if season changed and clear cache automatically
+    if st.session_state.previous_season != selected_season:
+        get_player_game_stats.clear()
+        get_player_season_stats.clear()
+        st.session_state.previous_season = selected_season
     
     # Statistic selection for charts
     stat_options = ["PTS", "AST", "REB", "STL", "BLK", "TOV", "PLUS_MINUS"]
@@ -532,7 +564,7 @@ def main():
     # Load player data
     with st.spinner("Loading player data..."):
         # This would be replaced with database queries in production
-        player_game_stats = get_player_game_stats(selected_player["id"])
+        player_game_stats = get_player_game_stats(selected_player["id"], selected_season)
         player_season_stats = get_player_season_stats(selected_player["id"])
     
     # Player header section
