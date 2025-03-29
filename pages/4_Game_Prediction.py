@@ -9,30 +9,18 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 import sys
-import logging
 from datetime import datetime, timedelta
 import random
-
-# Setup basic logging
-logging.basicConfig(level=logging.INFO)
-module_logger = logging.getLogger("game_prediction")
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# Import utilities and modules with error handling
-try:
-    from sportsiq.utils.db_utils import test_connection, execute_query
-    from sportsiq.utils.style import apply_light_mode
-except ImportError:
-    # If import fails, create placeholder functions
-    module_logger.warning("Could not import from sportsiq.utils, using placeholder functions")
-    def test_connection():
-        return True
-    def execute_query(query, params=None):
-        return []
-    def apply_light_mode():
-        pass
+# Import utilities and modules
+from sportsiq.utils import setup_logging, get_logger, test_connection, execute_query
+
+# Set up logging
+logger = setup_logging()
+module_logger = get_logger("game_prediction")
 
 # Set page configuration
 st.set_page_config(
@@ -42,10 +30,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Apply light mode from central style utility
-apply_light_mode()
-
-# Custom CSS for this page only
+# Custom CSS
 st.markdown("""
 <style>
     .page-title {
@@ -221,18 +206,20 @@ def get_team_stats(team_id):
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def get_head_to_head(team1_id, team2_id):
     """Generate sample head-to-head statistics"""
-    # Use consistent seed based on both team IDs - ensure it's a valid integer
+    # Use consistent seed based on both team IDs, but ensure it's within valid range
     try:
-        # Convert to integers first to avoid any type issues
-        team1_id_int = int(team1_id)
-        team2_id_int = int(team2_id)
-        # Use a simple hash to avoid integer overflow
-        seed_value = (team1_id_int * 1000 + team2_id_int) % 2147483647  # Max 32-bit integer
-        np.random.seed(seed_value)
-    except Exception as e:
-        # If there's any error with the seed, use a default
-        st.warning(f"Warning: Using default seed for head-to-head stats: {str(e)}")
-        np.random.seed(42)
+        # Convert to integers in case they're strings
+        team1_id = int(team1_id)
+        team2_id = int(team2_id)
+        
+        # Calculate seed and use modulo to ensure it's within valid range
+        # 2^32 - 1 = 4294967295 (max value for numpy seed)
+        seed = (team1_id * 1000 + team2_id) % 2147483647  # Use a safe maximum (2^31 - 1)
+        np.random.seed(seed)
+    except ValueError:
+        # If there's any issue with the conversion, use a default seed
+        module_logger.warning(f"Could not create valid seed from team IDs: {team1_id}, {team2_id}. Using default seed.")
+        np.random.seed(42)  # Use a default seed
     
     # Generate recent meetings (last 3 games)
     meetings = []
@@ -307,15 +294,6 @@ def predict_game_outcome(home_team_id, away_team_id):
     # Get head to head stats
     h2h = get_head_to_head(home_team_id, away_team_id)
     
-    # Set a safe random seed for consistent predictions
-    try:
-        # Convert to integers and create a safe seed value
-        seed_value = (int(home_team_id) * 10000 + int(away_team_id)) % 2147483647
-        np.random.seed(seed_value)
-    except Exception:
-        # Use a default seed if there's any issue
-        np.random.seed(42)
-    
     # Calculate basic predictors (with home court advantage)
     # This is a simplified model - a real one would be much more complex
     
@@ -337,6 +315,20 @@ def predict_game_outcome(home_team_id, away_team_id):
         h2h_ratio = h2h["TEAM1_WINS"] / (h2h["TEAM1_WINS"] + h2h["TEAM2_WINS"])
         h2h_factor = (h2h_ratio - 0.5) * 0.05  # Small adjustment based on h2h
         base_prob += h2h_factor
+    
+    # Set a seed for consistency but ensure it's within valid range
+    try:
+        # Convert to integers in case they're strings
+        seed_home = int(home_team_id)
+        seed_away = int(away_team_id)
+        
+        # Calculate a safe seed value
+        seed = (seed_home * 1000 + seed_away + 42) % 2147483647  # Use a safe maximum (2^31 - 1)
+        np.random.seed(seed)
+    except ValueError:
+        # If there's any issue with the conversion, use a default seed
+        module_logger.warning(f"Could not create valid seed from team IDs: {home_team_id}, {away_team_id}. Using default seed.")
+        np.random.seed(42)  # Use a default seed
     
     # Add a small random factor to make predictions less deterministic
     random_factor = np.random.normal(0, 0.02)  # Small random noise
