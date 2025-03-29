@@ -206,9 +206,20 @@ def get_team_stats(team_id):
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def get_head_to_head(team1_id, team2_id):
     """Generate sample head-to-head statistics"""
-    # Use consistent seed based on both team IDs
-    seed = team1_id * 1000 + team2_id
-    np.random.seed(seed)
+    # Use consistent seed based on both team IDs, but ensure it's within valid range
+    try:
+        # Convert to integers in case they're strings
+        team1_id = int(team1_id)
+        team2_id = int(team2_id)
+        
+        # Calculate seed and use modulo to ensure it's within valid range
+        # 2^32 - 1 = 4294967295 (max value for numpy seed)
+        seed = (team1_id * 1000 + team2_id) % 2147483647  # Use a safe maximum (2^31 - 1)
+        np.random.seed(seed)
+    except ValueError:
+        # If there's any issue with the conversion, use a default seed
+        module_logger.warning(f"Could not create valid seed from team IDs: {team1_id}, {team2_id}. Using default seed.")
+        np.random.seed(42)  # Use a default seed
     
     # Generate recent meetings (last 3 games)
     meetings = []
@@ -304,6 +315,20 @@ def predict_game_outcome(home_team_id, away_team_id):
         h2h_ratio = h2h["TEAM1_WINS"] / (h2h["TEAM1_WINS"] + h2h["TEAM2_WINS"])
         h2h_factor = (h2h_ratio - 0.5) * 0.05  # Small adjustment based on h2h
         base_prob += h2h_factor
+    
+    # Set a seed for consistency but ensure it's within valid range
+    try:
+        # Convert to integers in case they're strings
+        seed_home = int(home_team_id)
+        seed_away = int(away_team_id)
+        
+        # Calculate a safe seed value
+        seed = (seed_home * 1000 + seed_away + 42) % 2147483647  # Use a safe maximum (2^31 - 1)
+        np.random.seed(seed)
+    except ValueError:
+        # If there's any issue with the conversion, use a default seed
+        module_logger.warning(f"Could not create valid seed from team IDs: {home_team_id}, {away_team_id}. Using default seed.")
+        np.random.seed(42)  # Use a default seed
     
     # Add a small random factor to make predictions less deterministic
     random_factor = np.random.normal(0, 0.02)  # Small random noise
