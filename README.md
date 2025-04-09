@@ -1,6 +1,6 @@
 # SportsIQ 🏀
 
-![SportsIQ Banner](https://picsum.photos/800/200)
+
 
 SportsIQ is a comprehensive NBA analytics dashboard that provides real-time insights and advanced statistics for basketball teams and players. The application combines data from multiple sources with machine learning models to deliver predictive analytics and stunning visualizations.
 
